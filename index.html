@@ -208,6 +208,17 @@
     .tc-number{font-size:30px;}
     .r-header .t{font-size:19px;}
   }
+
+  /* GitHub Star / Watch 按鈕（純靜態連結跳轉） */
+  .gh-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:16px 0;}
+  .gh-btn{display:inline-flex;align-items:center;gap:7px;padding:9px 15px;border-radius:9px;
+    font-weight:600;font-size:14px;text-decoration:none;transition:transform .12s ease, box-shadow .12s ease;}
+  .gh-btn:hover{transform:translateY(-1px);}
+  .gh-btn-primary{background:var(--blue);color:#fff;}
+  .gh-btn-primary:hover{box-shadow:0 4px 14px rgba(1,77,178,.28);}
+  .gh-btn-ghost{background:#fff;color:var(--blue);border:1px solid var(--blue);}
+  .gh-btn-ghost:hover{background:var(--blue-tint);}
+  .gh-count{height:18px;vertical-align:middle;}
 </style>
 </head>
 <body>
@@ -229,6 +240,17 @@
   </header>
 
   <div class="content">
+    <!-- GitHub Star / Watch（置頂） -->
+    <div class="gh-actions">
+      <a class="gh-btn gh-btn-primary" href="https://github.com/YOUR_GITHUB_USERNAME/cspf-calculator" target="_blank" rel="noopener">
+        <span aria-hidden="true">★</span> Star 這個專案
+        <img class="gh-count" src="https://img.shields.io/github/stars/YOUR_GITHUB_USERNAME/cspf-calculator?style=social" alt="GitHub stars"/>
+      </a>
+      <a class="gh-btn gh-btn-ghost" href="https://github.com/YOUR_GITHUB_USERNAME/cspf-calculator/subscription" target="_blank" rel="noopener">
+        <span aria-hidden="true">👁</span> Watch 更新
+      </a>
+    </div>
+
     <!-- Hero -->
     <section class="hero">
       <div class="hero-kicker">退休權益估算</div>
