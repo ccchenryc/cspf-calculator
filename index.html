@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CSPF 公積金計算機</title>
+<meta name="description" content="香港公務員公積金(CSPF)與一般 MPF 退休權益試算機：支援文職、紀律部隊（員佐級／主任級）及普通打工模式。所有計算均在瀏覽器本地完成，不上傳任何資料。" />
+<meta name="theme-color" content="#014DB2" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="CSPF 公積金計算機" />
+<meta property="og:description" content="香港公務員公積金(CSPF)與一般 MPF 退休權益試算機：支援文職、紀律部隊及普通打工模式，計算在瀏覽器本地完成。" />
+<meta property="og:locale" content="zh_HK" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23014DB2'/><path d='M7 21 L13 15 L18 19 L25 11' stroke='white' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>" />
+<style>
+  :root{
+    --bg:#F9F9F9; --card:#FFFFFF; --ink:#0A1628; --muted:#6B7280; --faint:#9CA3AF;
+    --blue:#014DB2; --blue-deep:#001645; --gov:#014DB2; --emp:#10B981;
+    --amber:#F59E0B; --red:#EF4444; --line:#EAEAEA; --blue-tint:#EFF3FB;
+    --shadow:0 2px 8px rgba(1,77,178,.06);
+    --font-base:"PingFang SC","Microsoft JhengHei","Noto Sans HK","Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:var(--font-base);
+    -webkit-font-smoothing:antialiased;
+  }
+  .num{font-family:var(--font-base); font-feature-settings:"tnum" 1; font-variant-numeric:tabular-nums;}
+  .app{max-width:1440px;width:100%; margin:0 auto; background:var(--bg);}
+
+  /* Header */
+  .header{height:64px; background:#fff; border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; padding:0 48px;}
+  .brand{display:flex; align-items:center; gap:12px;}
+  .brand-mark{width:36px;height:36px;border-radius:10px;
+    background:linear-gradient(135deg,#014DB2,#001645);
+    display:flex;align-items:center;justify-content:center;}
+  .brand-text{font-size:18px;font-weight:600;}
+  .nav{display:flex;gap:28px;align-items:center;}
+  .nav a{font-size:15px;text-decoration:none;color:var(--muted);}
+  .nav a.active{color:var(--blue);font-weight:500;}
+  .ref-badge{background:#FEF3C7;color:#B45309;font-size:13px;font-weight:600;
+    padding:6px 12px;border-radius:50px;}
+
+  .content{padding:40px 48px 48px;display:flex;flex-direction:column;gap:24px;}
+
+  /* Hero */
+  .hero{border-radius:50px;padding:48px;
+    background:linear-gradient(135deg,#014DB2 0%,#001645 100%);
+    display:flex;flex-direction:column;gap:16px;align-items:flex-start;}
+  .hero-kicker{background:rgba(255,255,255,.12);color:#fff;font-size:13px;font-weight:600;
+    padding:6px 14px;border-radius:50px;}
+  .hero-title{font-size:20px;color:#C7D6EE;}
+  .hero-number{font-family:var(--font-base);font-weight:700;font-size:46px;color:#fff;line-height:1.1;}
+  .hero-sub{display:flex;gap:48px;margin-top:12px;}
+  .hero-stat .l{font-size:14px;color:#9FB6DC;}
+  .hero-stat .v{font-family:var(--font-base);font-weight:600;font-size:24px;color:#fff;}
+  .hero-note{font-size:13px;color:#9FB6DC;margin-top:8px;}
+
+  /* Main grid */
+  .main-grid{display:flex;gap:24px;align-items:flex-start;}
+  .input-panel{width:440px;flex:none;background:#fff;border:1px solid var(--line);
+    border-radius:28px;padding:32px;display:flex;flex-direction:column;gap:22px;box-shadow:var(--shadow);}
+  .ip-title{font-size:20px;font-weight:600;}
+  .field{display:flex;flex-direction:column;gap:8px;}
+  .field label{font-size:14px;font-weight:500;}
+  .field .note{font-size:12px;color:var(--muted);}
+  .input{height:48px;border:1px solid #D6D9DE;border-radius:14px;background:#FAFAFC;
+    padding:0 16px;display:flex;align-items:center;justify-content:space-between;
+    font-size:16px;font-family:var(--font-base);}
+  .input:focus-within{border-color:var(--blue);background:#fff;}
+  .input input{border:none;background:transparent;outline:none;font-size:16px;
+    font-family:var(--font-base);width:100%;color:var(--ink);}
+  .seg{height:48px;background:#F2F4F8;border-radius:50px;padding:4px;display:flex;gap:4px;}
+  .seg button{flex:1;border:none;background:transparent;border-radius:50px;height:100%;
+    font-size:15px;color:var(--muted);cursor:pointer;font-family:inherit;}
+  .seg button.on{background:var(--blue);color:#fff;font-weight:600;}
+  .seg-sm{display:inline-flex;height:34px;background:#F2F4F8;border-radius:50px;padding:3px;gap:3px;margin-bottom:8px;}
+  .seg-sm button{flex:1;border:none;background:transparent;border-radius:50px;height:100%;padding:0 14px;
+    font-size:12px;color:var(--muted);cursor:pointer;font-family:inherit;white-space:nowrap;}
+  .seg-sm button.on{background:var(--blue);color:#fff;font-weight:600;}
+  select.input{font-family:inherit;width:100%;cursor:pointer;background:#FAFAFC;}
+  .mode-toggle{display:flex;gap:8px;}
+  .mode-toggle button{flex:1;height:40px;border:1px solid #D6D9DE;background:#fff;border-radius:12px;
+    font-size:14px;color:var(--muted);cursor:pointer;font-family:inherit;}
+  .mode-toggle button.on{background:var(--blue-tint);border-color:var(--blue);color:var(--blue);font-weight:600;}
+  .point-line{font-size:13px;color:var(--blue);font-weight:600;margin-top:-6px;}
+  .hidden{display:none;}
+  .calc-btn{height:52px;border:none;border-radius:50px;background:var(--blue);color:#fff;
+    font-size:17px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:8px;}
+  .calc-btn:active{transform:translateY(1px);}
+
+  /* Result panel */
+  .result-panel{flex:1;display:flex;flex-direction:column;gap:24px;}
+  .r-header .t{font-size:22px;font-weight:600;}
+  .r-header .s{font-size:14px;color:var(--muted);margin-top:4px;}
+  .total-card{background:#fff;border:1px solid var(--line);border-radius:28px;padding:32px;
+    display:flex;flex-direction:column;gap:16px;box-shadow:var(--shadow);}
+  .tc-label{font-size:14px;color:var(--muted);}
+  .tc-number{font-family:var(--font-base);font-weight:700;font-size:44px;color:var(--ink);}
+  .bar{height:16px;border-radius:8px;overflow:hidden;display:flex;}
+  .seg-gov{background:var(--gov);}
+  .seg-emp{background:var(--emp);}
+  .legend{display:flex;gap:32px;margin-top:8px;}
+  .legend .item{display:flex;align-items:center;gap:8px;}
+  .dot{width:10px;height:10px;border-radius:50%;}
+  .legend .lbl{font-size:14px;color:var(--muted);}
+  .legend .amt{font-family:var(--font-base);font-weight:600;font-size:15px;}
+
+  .stat-row{display:flex;gap:16px;}
+  .stat{flex:1;background:#fff;border:1px solid var(--line);border-radius:24px;padding:20px;
+    display:flex;flex-direction:column;gap:8px;box-shadow:var(--shadow);}
+  .stat .l{font-size:13px;color:var(--muted);}
+  .stat .v{font-family:var(--font-base);font-weight:700;font-size:22px;}
+  .stat .p{font-size:12px;color:var(--muted);}
+
+  .chart-card{background:#fff;border:1px solid var(--line);border-radius:24px;padding:28px;
+    display:flex;flex-direction:column;gap:16px;box-shadow:var(--shadow);}
+  .chart-head{display:flex;justify-content:space-between;align-items:center;}
+  .chart-head .t{font-size:18px;font-weight:600;}
+  .chart-tag{background:#EFF3FB;color:var(--blue);font-size:12px;font-weight:600;
+    padding:6px 12px;border-radius:50px;}
+  .chart-wrap{width:100%;position:relative;}
+  .chart-wrap svg{display:block;width:100%;height:auto;cursor:crosshair;}
+  .hl{stroke:#001645;stroke-width:1;stroke-dasharray:3 3;opacity:0;}
+  .hd{fill:#001645;stroke:#fff;stroke-width:2.5;opacity:0;}
+  .chart-tip{position:absolute;transform:translate(-50%,-130%);background:#001645;color:#fff;
+    padding:8px 12px;border-radius:10px;font-size:12px;line-height:1.5;pointer-events:none;
+    white-space:nowrap;opacity:0;transition:opacity .08s;z-index:5;box-shadow:0 4px 14px rgba(0,22,69,.25);}
+  .chart-tip .ty{font-family:var(--font-base);font-weight:700;font-size:15px;display:block;}
+  .chart-tip .tl{color:#9FB6DC;}
+  .x-labels{display:flex;justify-content:space-between;margin-top:4px;font-size:12px;color:var(--muted);}
+  .x-labels .amber{color:var(--amber);}
+  .contrib-legend{display:flex;gap:24px;font-size:13px;color:var(--muted);}
+  .contrib-legend .lg{display:flex;align-items:center;gap:8px;}
+  .contrib-legend .dot.gov{background:var(--blue);}
+  .contrib-legend .dot.emp{background:var(--emp);}
+  .contrib-tip .bd{display:flex;align-items:center;gap:6px;font-size:12px;color:#C7D6EE;}
+  .contrib-tip .bd.info{color:#fff;font-weight:500;}
+  .contrib-tip .bd .dot.gov{background:var(--blue);width:8px;height:8px;}
+  .contrib-tip .bd .dot.emp{background:var(--emp);width:8px;height:8px;}
+
+  .milestone{background:#EFF3FB;border:1px solid #D6E3F5;border-radius:24px;padding:24px;
+    display:flex;gap:16px;align-items:center;}
+  .milestone-icon{width:40px;height:40px;border-radius:12px;background:var(--blue);
+    display:flex;align-items:center;justify-content:center;flex:none;}
+  .milestone .t{font-size:15px;font-weight:600;}
+  .milestone .d{font-size:13px;color:var(--muted);margin-top:4px;}
+
+  /* Section */
+  .section{display:flex;flex-direction:column;gap:16px;}
+  .section .t{font-size:22px;font-weight:600;}
+  .section .s{font-size:14px;color:var(--muted);margin-top:4px;}
+  .scenario-grid{display:flex;gap:16px;}
+  .sc-card{flex:1;background:#fff;border:1px solid var(--line);border-radius:24px;padding:24px;
+    display:flex;flex-direction:column;gap:12px;box-shadow:var(--shadow);}
+  .sc-card .t{font-size:16px;font-weight:600;}
+  .sc-card .d{font-size:13px;color:var(--muted);}
+  .sc-card .v{font-family:var(--font-base);font-weight:700;font-size:24px;}
+  .sc-card .delta{font-size:12px;}
+
+  .mps-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;}
+  .mps-cell{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;
+    display:flex;flex-direction:column;gap:2px;box-shadow:var(--shadow);}
+  .mps-cell .pl{font-size:12px;color:var(--muted);}
+  .mps-cell .pv{font-family:var(--font-base);font-weight:600;font-size:14px;color:var(--ink);}
+  .mps-cell.cur{background:var(--blue-tint);border-color:var(--blue);}
+  .mps-cell.cur .pl,.mps-cell.cur .pv{color:var(--blue);}
+  .mps-note{font-size:12px;color:var(--muted);margin-top:16px;}
+
+  .notes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;}
+  .note-card{background:#fff;border:1px solid var(--line);border-radius:24px;padding:22px;
+    display:flex;flex-direction:column;gap:8px;box-shadow:var(--shadow);}
+  .note-card .nt{font-size:16px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:8px;}
+  .note-card .ni{width:28px;height:28px;border-radius:8px;background:var(--blue-tint);
+    color:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex:none;}
+  .note-card .nd{font-size:13px;color:var(--muted);line-height:1.6;}
+  .note-card .nd b{color:var(--ink);font-weight:600;}
+  html{scroll-behavior:smooth;}
+  section[id]{scroll-margin-top:20px;}
+
+  .footer{display:flex;flex-direction:column;gap:12px;padding-top:24px;margin-top:8px;}
+  .foot-div{height:1px;background:var(--line);}
+  .foot-text{font-size:13px;color:var(--faint);line-height:1.6;}
+  .foot-brand{font-size:12px;color:var(--faint);}
+
+  /* ---------- 響應式（手機 / 平板） ---------- */
+  @media (max-width: 960px){
+    .content{padding:24px 16px 32px;}
+    .header{padding:0 16px;}
+    .main-grid{flex-direction:column;}
+    .input-panel{width:100%;}
+    .hero{padding:32px 24px;border-radius:32px;}
+    .hero-number{font-size:34px;}
+    .hero-sub{gap:24px;flex-wrap:wrap;}
+    .total-card{padding:24px;}
+    .tc-number{font-size:34px;}
+    .stat-row{flex-direction:column;}
+    .scenario-grid{flex-direction:column;}
+    .chart-card{padding:20px;}
+    .legend{gap:16px;flex-wrap:wrap;}
+    .contrib-legend{flex-wrap:wrap;}
+  }
+  @media (max-width: 600px){
+    .nav{display:none;}
+    .header{height:56px;}
+    .hero-number{font-size:30px;}
+    .tc-number{font-size:30px;}
+    .r-header .t{font-size:19px;}
+  }
+</style>
+</head>
+<body>
+<div class="app" id="top">
+  <!-- Header -->
+  <header class="header">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 16L9 11L13 15L20 8" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 8H20V13" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="brand-text">CSPF 公積金計算機</div>
+    </div>
+    <nav class="nav">
+      <a href="#top" class="active">計算機</a>
+      <a href="#calcNotes">計算說明</a>
+      <a href="#mps">總薪級表</a>
+    </nav>
+    <div class="ref-badge">只供參考</div>
+  </header>
+
+  <div class="content">
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-kicker">退休權益估算</div>
+      <div class="hero-title">預計退休權益總額</div>
+      <div class="hero-number num" id="heroTotal">HK$0</div>
+      <div class="hero-sub">
+        <div class="hero-stat"><div class="l">退休年齡</div><div class="v num" id="heroAge">—</div></div>
+        <div class="hero-stat"><div class="l">預計服務年資</div><div class="v num" id="heroSvc">—</div></div>
+      </div>
+      <div class="hero-note">按當前輸入與假設估算，結果僅供參考，不構成投資建議。</div>
+    </section>
+
+    <!-- Main grid -->
+    <div class="main-grid">
+      <!-- Input panel -->
+      <aside class="input-panel">
+        <div class="ip-title">輸入資料</div>
+
+        <div class="field">
+          <label>入職日期</label>
+          <div class="input"><input type="date" id="joinDate" value="2015-09-01" /></div>
+        </div>
+
+        <div class="field">
+          <label>職系類別</label>
+          <div class="seg" id="catSeg">
+            <button type="button" class="on" data-cat="civil">文職人員</button>
+            <button type="button" data-cat="force">紀律部隊</button>
+            <button type="button" data-cat="private">普通打工</button>
+          </div>
+        </div>
+
+        <div class="field hidden" id="rankField">
+          <label>紀律部隊階級</label>
+          <div class="seg" id="rankSeg">
+            <button type="button" class="on" data-rank="nco">員佐級</button>
+            <button type="button" data-rank="officer">主任級</button>
+          </div>
+          <div class="note" id="rankNote">員佐級採用「紀律人員(員佐級)薪級表」（CSB 47）</div>
+        </div>
+
+        <div class="field">
+          <label>入職時年齡</label>
+          <div class="input"><input type="number" id="joinAge" value="24" min="18" max="60" /></div>
+          <div class="note">用於推算服務年資（預計退休年齡 − 入職年齡）</div>
+        </div>
+
+        <div class="field">
+          <label>預計退休年齡</label>
+          <div class="input"><input type="number" id="retireAge" value="60" min="45" max="65" /></div>
+        </div>
+
+        <div class="field">
+          <label>薪資模式</label>
+          <div class="mode-toggle" id="modeToggle">
+            <button type="button" class="on" data-mode="manual">手動輸入</button>
+            <button type="button" data-mode="scale">薪級表晉升</button>
+          </div>
+        </div>
+
+        <div class="field" id="manualField">
+          <label>現時月薪</label>
+          <div class="input"><input type="number" id="salary" value="32000" step="500" /></div>
+          <div class="note" id="mpsNote">約總薪級表第 — 點</div>
+        </div>
+
+        <div class="field hidden" id="scaleField">
+          <label>入職薪點</label>
+          <div class="input"><select class="input" id="startPoint"></select></div>
+          <label style="margin-top:6px">最高薪點</label>
+          <div class="input"><select class="input" id="maxPoint"></select></div>
+          <div class="point-line" id="pointLine">入職月薪 —</div>
+        </div>
+
+        <div class="field">
+          <label id="growthLabel">預期年薪增長率</label>
+          <div class="input"><input type="number" id="growth" value="3" step="0.5" /><span style="color:var(--muted)">%</span></div>
+          <div class="note" id="growthNote">薪資每年按此比率遞增</div>
+        </div>
+
+        <div class="field">
+          <label>預期年投資回報率</label>
+          <div class="input"><input type="number" id="ret" value="4" step="0.5" /><span style="color:var(--muted)">%</span></div>
+        </div>
+
+        <div class="field">
+          <label>每月自願供款（可選）</label>
+          <div class="seg-sm hidden" id="volModeSeg">
+            <button type="button" class="on" data-vmode="fixed">固定金額</button>
+            <button type="button" data-vmode="pct">工資 %</button>
+          </div>
+          <div class="input"><input type="number" id="vol" value="1600" step="100" /><span id="volUnit" style="color:var(--muted)">HK$</span></div>
+          <div class="note" id="volNote">員工額外供款，可隨時調整</div>
+        </div>
+
+        <button class="calc-btn" id="calcBtn">計算退休權益</button>
+      </aside>
+
+      <!-- Result panel -->
+      <div class="result-panel">
+        <div class="r-header">
+          <div class="t">累算權益總覽</div>
+          <div class="s">政府供款與員工供款，連同投資回報之累計總額</div>
+        </div>
+
+        <div class="total-card">
+          <div class="tc-label">預計累算權益總額</div>
+          <div class="tc-number num" id="totalNum">HK$0</div>
+          <div class="bar">
+            <div class="seg-gov" id="barGov" style="width:63%"></div>
+            <div class="seg-emp" id="barEmp" style="width:37%"></div>
+          </div>
+          <div class="legend">
+            <div class="item"><span class="dot" style="background:var(--gov)"></span><span class="lbl" id="legGovLbl">政府供款及回報</span><span class="amt num" id="legGov">HK$0</span></div>
+            <div class="item"><span class="dot" style="background:var(--emp)"></span><span class="lbl" id="legEmpLbl">員工供款及回報</span><span class="amt num" id="legEmp">HK$0</span></div>
+          </div>
+        </div>
+
+        <div class="stat-row">
+          <div class="stat">
+            <div class="l" id="statGovLbl">政府供款及回報</div>
+            <div class="v num" id="statGov" style="color:var(--gov)">HK$0</div>
+            <div class="p" id="statGovPct">佔總額 —</div>
+          </div>
+          <div class="stat">
+            <div class="l">員工供款及回報</div>
+            <div class="v num" id="statEmp" style="color:var(--emp)">HK$0</div>
+            <div class="p" id="statEmpPct">佔總額 —</div>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-head">
+            <div class="t">權益增長曲線</div>
+            <div class="chart-tag" id="chartTag">— 年複利增長</div>
+          </div>
+          <div class="chart-wrap" id="chartWrap"></div>
+          <div class="x-labels" id="xLabels"></div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-head">
+            <div class="t">每年每月供款</div>
+            <div class="chart-tag" id="contribTag">政府 + 員工</div>
+          </div>
+          <div class="chart-wrap" id="contribWrap"></div>
+          <div class="x-labels" id="contribLabels"></div>
+          <div class="contrib-legend">
+            <span class="lg"><i class="dot gov"></i><span id="contribGovLbl">政府供款</span></span>
+            <span class="lg"><i class="dot emp"></i>員工供款（含自願）</span>
+          </div>
+        </div>
+
+        <div class="milestone">
+          <div class="milestone-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M6 21V4a1 1 0 011-1h10a1 1 0 011 1v17l-6-3-6 3z" stroke="white" stroke-width="2" stroke-linejoin="round"/></svg>
+          </div>
+          <div>
+            <div class="t" id="milestoneTitle">10 年歸屬期</div>
+            <div class="d" id="milestoneDesc">服務滿 10 年後，政府供款方可全數歸屬；此前離職將按比例失去部分政府供款。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scenario -->
+    <section class="section">
+      <div class="t">情景分析</div>
+      <div class="s">比較不同人生選擇下的累算權益變化</div>
+      <div class="scenario-grid">
+        <div class="sc-card">
+          <div class="t">職系晉升</div>
+          <div class="d">月薪上調 20%，政府供款比率同步提升。</div>
+          <div class="v num" id="sc1Val" style="color:var(--emp)">HK$0</div>
+          <div class="delta" id="sc1Delta" style="color:var(--emp)">較基本情景 —</div>
+        </div>
+        <div class="sc-card">
+          <div class="t">第 8 年離職</div>
+          <div class="d" id="sc2Desc">未滿 10 年歸屬期，失去全部政府供款。</div>
+          <div class="v num" id="sc2Val" style="color:var(--red)">HK$0</div>
+          <div class="delta" id="sc2Delta" style="color:var(--red)">僅取回員工供款及回報</div>
+        </div>
+        <div class="sc-card">
+          <div class="t" id="sc3Title">紀律部隊</div>
+          <div class="d" id="sc3Desc">額外 2.5% 政府特別供款，長期複利可觀。</div>
+          <div class="v num" id="sc3Val" style="color:var(--gov)">HK$0</div>
+          <div class="delta" id="sc3Delta" style="color:var(--gov)">較文職高 —</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MPS -->
+    <section class="section" id="mps">
+      <div class="t" id="mpsTitle">總薪級表參考</div>
+      <div class="s" id="mpsSub">資料來源：公務員事務局（只供參考，2026-04-01 起生效）</div>
+      <div class="mps-grid" id="mpsGrid"></div>
+      <div class="mps-note" id="mpsFoot">月薪隨薪級表逐年調整，詳情請參閱公務員事務局官方網頁。藍色高亮為你選擇的入職薪點。</div>
+    </section>
+
+    <!-- 計算說明 -->
+    <section class="section" id="calcNotes">
+      <div class="t">計算說明</div>
+      <div class="s">本計算機所用的假設與公式，所有數字均為估算，僅供參考</div>
+      <div class="notes-grid">
+        <div class="note-card">
+          <div class="nt"><span class="ni">政</span>政府累進供款</div>
+          <div class="nd" id="govNote"></div>
+        </div>
+        <div class="note-card">
+          <div class="nt"><span class="ni">員</span>員工供款</div>
+          <div class="nd">法定強制供款為月薪 <b>5%</b>，另可自選每月自願供款；兩者連同投資回報一併累積。</div>
+        </div>
+        <div class="note-card">
+          <div class="nt"><span class="ni">紀</span>紀律部隊</div>
+          <div class="nd">紀律部隊人員額外獲政府 <b>2.5%</b> 特別供款，長期複利效應可觀；薪級表依階級而異——員佐級採用「紀律人員(員佐級)薪級表」（CSB 47），主任級採用「紀律人員(主任級)薪級表」（CSB 46），均與總薪級表不同。</div>
+        </div>
+        <div class="note-card">
+          <div class="nt"><span class="ni">歸</span>10 年歸屬期</div>
+          <div class="nd">服務滿 <b>10 年</b>後政府供款方可全數歸屬；此前離職將失去全部政府供款，僅取回員工部分。</div>
+        </div>
+        <div class="note-card">
+          <div class="nt"><span class="ni">利</span>投資回報</div>
+          <div class="nd">所有供款按假設年回報率 <b>按月複利</b> 滾存，年資越長，複利效應越顯著。</div>
+        </div>
+        <div class="note-card">
+          <div class="nt"><span class="ni">升</span>薪級表晉升</div>
+          <div class="nd">選「薪級表晉升」模式時，薪點每年自動 +1 直至最高薪點，並按年度調整率增長。</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="foot-div"></div>
+      <div class="foot-text">本計算機僅供教育與參考用途，所有數字均為假設估算，並非正式權益預測。公務員公積金計劃的供款比率、歸屬期及投資回報，均以公務員事務局最新公布為準。</div>
+      <div class="foot-brand">CSPF 公積金計算機 · 參考來源：公務員事務局、1880.com.hk</div>
+    </footer>
+  </div>
+</div>
+
+<script>
+// ---------- CSPF 計算邏輯 ----------
+// 政府累進供款比率（來源：公務員事務局「公積金計劃的要點」/ 421.html）
+// 兩套比率取決於入職日期：
+//  · 2015-06-01 前入職（未選擇延長服務年期）→ 舊表
+//  · 2015-06-01 起入職（或選擇延長服務年期）→ 新表
+// 每組為 [年資上限, 比率] 的台階表；年資 < 第一個上限時取首個比率
+// 前 3 年（5% 一檔）政府供款封頂 HK$1,500；其後各檔（15% 起）不設上限
+const GOV_PRE_2015 = [[3,0.05],[15,0.15],[20,0.17],[25,0.20],[30,0.22],[Infinity,0.25]];
+const GOV_POST_2015 = [[3,0.05],[18,0.15],[24,0.17],[30,0.20],[35,0.22],[Infinity,0.25]];
+function cohortFromJoin(joinDateStr){
+  const d = new Date(joinDateStr);
+  if(isNaN(d.getTime())) return 'post';
+  return d < new Date('2015-06-01') ? 'pre' : 'post';
+}
+function govRate(years, cohort){
+  const tbl = cohort === 'pre' ? GOV_PRE_2015 : GOV_POST_2015;
+  for(const [cap, rate] of tbl){ if(years < cap) return rate; }
+  return 0.25;
+}
+const EMP_RATE = 0.05;        // 員工法定強制供款 5%
+const FORCE_EXTRA = 0.025;    // 紀律部隊額外 2.5%
+const VEST_YEARS = 10;        // 歸屬期
+const EMP_CAP = 1500;         // 員工法定供款上限 HK$1,500
+const GOV_CAP = 1500;         // 政府供款上限 HK$1,500
+
+const fmt = n => 'HK$' + Math.round(n).toLocaleString('en-HK');
+
+// 總薪級表（月薪，2026-04-01 起生效，只供參考）
+// 資料來源：公務員事務局「總薪級表」官方網頁 csb.gov.hk/tc_chi/admin/pay/42.html
+// 完整 0–49 薪點，直接對照（含 33A/B/C、44A/B 等比對薪點），不再插值
+const MPS_SALARY = [
+  14570, 15485, 16460, 17545, 18675, 19930, 21190, 22590, 24060, 25620, // 0–9
+  27120, 28790, 30595, 32430, 34075, 35780, 37585, 39490, 41430, 43495, // 10–19
+  45660, 47950, 50215, 52575, 55060, 57580, 60290, 63100, 66075, 69205, // 20–29
+  72430, 75830, 79410, 83140, 83975, 84815, 86835, 90955, 95120, 99525, // 30–39
+  103810, 108280, 112955, 117805, 122045, 130255, 134920, 139825, 144850, 150070 // 40–49
+];
+function mpsAt(p){
+  p = Math.max(0, Math.min(49, Math.round(p)));
+  return MPS_SALARY[p];
+}
+
+// 紀律人員(員佐級)薪級表（月薪，2026-04-01 起生效，只供參考）
+// 資料來源：公務員事務局「紀律人員(員佐級)薪級表」官方網頁 csb.gov.hk/tc_chi/admin/pay/47.html
+// 薪點 1–32，含 4a、31a 比對薪點；按薪點升序排列，index 即晉升步驟（0 = 第1點 … 33 = 第32點）
+const DSS_LABELS = ['1','2','3','4','4a','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31','31a','32'];
+const DSS_SALARY = [23205,23845,24555,25265,25620,25980,27110,27915,28900,29925,30880,31885,32890,33925,34945,35960,36995,38045,39205,40300,41405,42535,43720,44965,46155,47520,48985,50445,52465,54535,57265,60130,61630,63140];
+
+// 紀律人員(主任級)薪級表（月薪，2026-04-01 起生效，只供參考）
+// 資料來源：公務員事務局「紀律人員(主任級)薪級表」官方網頁 csb.gov.hk/tc_chi/admin/pay/46.html
+// 薪點 1–40，含 1a、1b 比對薪點；按薪資升序排列（1b < 1a < 1 < 2 … 40），index 即晉升步驟
+const DSS2_LABELS = ['1b','1a','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31','32','33','34','35','36','37','38','39','40'];
+const DSS2_SALARY = [30930,32330,33790,35275,37135,38985,41305,44000,46630,49300,52010,54705,57460,60395,63605,66815,70095,73435,76705,80025,82995,83830,84670,85515,87485,90775,94095,97755,101490,105270,109260,113335,117610,121980,130170,135010,140210,145645,151750,157870,163100,166365];
+// 依紀律部隊階級取得對應薪級表：員佐級（CSB 47）/ 主任級（CSB 46）
+function dssScale(rank){
+  return rank === 'officer'
+    ? {labels: DSS2_LABELS, salary: DSS2_SALARY, src: 'csb.gov.hk/tc_chi/admin/pay/46.html', name: '紀律人員(主任級)薪級表'}
+    : {labels: DSS_LABELS, salary: DSS_SALARY, src: 'csb.gov.hk/tc_chi/admin/pay/47.html', name: '紀律人員(員佐級)薪級表'};
+}
+
+// 核心投影：傳入 salaryFn(monthIndex) -> 當月月薪
+function project(o){
+  const {joinAge, retireAge, ret, vol, force, noGov, capYears, salaryFn, volMode, volPct} = o;
+  const serviceYears = Math.max(1, retireAge - joinAge);
+  const totalMonths = serviceYears * 12;
+  const monthlyRet = Math.pow(1 + ret, 1/12) - 1;
+
+  let balGov = 0, balEmp = 0;
+  const series = [];
+  for(let m = 0; m < totalMonths; m++){
+    const yos = m / 12;
+    const gRate = govRate(Math.floor(yos), o.cohort);
+    const sal = salaryFn(m);
+    let govContrib;
+    if(noGov){
+      // 普通打工（一般 MPF）：無政府供款，但有公司強制 5% 供款（封頂 $1,500）
+      govContrib = Math.min(EMP_RATE * sal, EMP_CAP);
+    } else {
+      const govRaw = (gRate + (force ? FORCE_EXTRA : 0)) * sal;
+      // 第 1–3 年政府供款封頂 $1,500；第 4 年起 15% 不設上限
+      govContrib = (gRate <= 0.05) ? Math.min(govRaw, GOV_CAP) : govRaw;
+    }
+    // 自願供款：固定金額(每月不變) 或 佔當前月薪百分比(隨薪資增長)
+    const volNow = (volMode === 'pct') ? (volPct / 100) * sal : vol;
+    const empContrib = Math.min(EMP_RATE * sal, EMP_CAP) + volNow;  // 員工法定 5% 封頂 $1,500 + 自願（不計上限）
+    // 第 10 年歸屬期：未達歸屬即離職 → 政府供款歸零（僅取回員工部分）
+    const effGov = (capYears && capYears < VEST_YEARS) ? 0 : govContrib;
+    balGov = (balGov + effGov) * (1 + monthlyRet);
+    balEmp = (balEmp + empContrib) * (1 + monthlyRet);
+    if(m % 12 === 11){
+      // 當年每月供款（含政府累進 + 員工法定/自願；未過歸屬期政府供款仍照常計提，僅離職時不歸屬）
+      const govM = govContrib;
+      const empM = empContrib;
+      const pt = o.pointFn ? o.pointFn(m) : null;
+      series.push({year: Math.floor(m/12) + 1, gov: balGov, emp: balEmp, total: balGov + balEmp,
+                   govM, empM, monthly: govM + empM, sal, pt});
+    }
+  }
+  return {serviceYears, total: balGov + balEmp, gov: balGov, emp: balEmp, series,
+          vested: !capYears || capYears >= VEST_YEARS};
+}
+
+// ---------- 渲染 ----------
+const $ = id => document.getElementById(id);
+let chartState = null;
+let govLabel = '政府供款';   // 普通打工模式下動態改為「公司供款」
+
+// 依 cohort 產生「政府累進供款」說明文字（對應公務員事務局 421 頁兩套比率）
+function govNoteHTML(cohort, noGov){
+  if(noGov){
+    return '普通打工（一般 MPF）：<b>沒有政府供款</b>，但有 <b>公司強制 5%</b>（封頂 $1,500），另加員工法定強制 <b>5%</b>（封頂 $1,500）及自願供款，按投資回報滾存。';
+  }
+  const tbl = cohort === 'pre' ? GOV_PRE_2015 : GOV_POST_2015;
+  const lbl = cohort === 'pre'
+    ? '2015-06-01 前入職（未延長服務年期）'
+    : '2015-06-01 起入職（或選擇延長服務年期）';
+  const segs = [
+    '未滿 3 年 5%（封頂 $1,500）',
+    '3 年至 ' + tbl[1][0] + ' 年以下 15%',
+    tbl[1][0] + ' 年至 ' + tbl[2][0] + ' 年以下 17%',
+    tbl[2][0] + ' 年至 ' + tbl[3][0] + ' 年以下 20%',
+    tbl[3][0] + ' 年至 ' + tbl[4][0] + ' 年以下 22%',
+    tbl[4][0] + ' 年或以上 25%'
+  ];
+  return '按服務年資遞增，由 <b>5%</b> 升至 <b>25%</b>（適用：' + lbl + '）：' + segs.join('、') + '。<b>前 3 年政府供款封頂 HK$1,500</b>。';
+}
+
+function render(o){
+  const base = project(o);
+  const {total, gov, emp, serviceYears, series} = base;
+
+  // 普通打工模式下，供款方標籤由「政府」改為「公司」
+  govLabel = o.noGov ? '公司供款' : '政府供款';
+  const govLabelFull = o.noGov ? '公司供款及回報' : '政府供款及回報';
+
+  // 自願供款單位與提示（僅普通打工提供「工資 %」選項）
+  if(o.noGov && o.volMode === 'pct'){
+    $('volUnit').textContent = '%';
+    $('volNote').textContent = '每月自願 = 當前月薪 × ' + o.volPct + '%，隨薪資增長';
+  } else {
+    $('volUnit').textContent = 'HK$';
+    $('volNote').textContent = '員工額外供款，可隨時調整' + (o.noGov ? '（亦可選按工資百分比）' : '');
+  }
+
+  $('heroTotal').textContent = fmt(total);
+  $('heroAge').textContent = o.retireAge + ' 歲';
+  $('heroSvc').textContent = serviceYears + ' 年';
+
+  $('totalNum').textContent = fmt(total);
+  const govPct = gov / total * 100;
+  const empPct = emp / total * 100;
+  $('barGov').style.width = govPct.toFixed(1) + '%';
+  $('barEmp').style.width = empPct.toFixed(1) + '%';
+  $('legGovLbl').textContent = govLabelFull;
+  $('legEmpLbl').textContent = '員工供款及回報';
+  $('legGov').textContent = fmt(gov);
+  $('legEmp').textContent = fmt(emp);
+  $('statGovLbl').textContent = govLabelFull;
+  $('statGov').textContent = fmt(gov);
+  $('statEmp').textContent = fmt(emp);
+  $('statGovPct').textContent = '佔總額 ' + Math.round(govPct) + '%';
+  $('statEmpPct').textContent = '佔總額 ' + Math.round(empPct) + '%';
+
+  $('chartTag').textContent = serviceYears + ' 年複利增長';
+
+  $('govNote').innerHTML = govNoteHTML(o.cohort, o.noGov);
+
+  // 歸屬期說明：普通打工（MPF）員工及公司供款即時歸屬，無政府額外供款
+  if(o.noGov){
+    $('milestoneTitle').textContent = '即時完全歸屬';
+    $('milestoneDesc').textContent = '一般 MPF 員工與公司供款即時完全歸屬，離職可全數轉出；但沒有政府額外供款。';
+  } else {
+    $('milestoneTitle').textContent = '10 年歸屬期';
+    $('milestoneDesc').textContent = '服務滿 10 年後政府供款方可全數歸屬；此前離職將失去全部政府供款，僅取回員工部分。';
+  }
+
+  const lastY = series.length ? series[series.length - 1] : null;
+  $('contribTag').textContent = lastY ? ('退休時每月 ' + fmt(lastY.monthly)) : (o.noGov ? '公司 + 員工' : '政府 + 員工');
+  $('contribGovLbl').textContent = govLabel;
+
+  // 情景
+  const sc1 = project({...o, salaryFn: m => 1.2 * o.salaryFn(m)});
+  const sc2 = project({...o, capYears: 8}); // 第8年離職，未過歸屬
+  let sc3, sc3Label, sc3Delta;
+  if(o.noGov){
+    sc3 = project({...o, noGov:false, force:false}); // 同等條件公務員文職
+    sc3Label = '公務員（文職）';
+    sc3Delta = '較公務員少 ' + Math.round((1 - total/sc3.total) * 100) + '%';
+  } else if(o.force){
+    sc3 = project({...o, force:false});
+    sc3Label = '文職人員';
+    sc3Delta = '較文職' + (total >= sc3.total ? '高 +' : '低 ') + Math.round((total/sc3.total - 1) * 100) + '%';
+  } else {
+    sc3 = project({...o, force:true});
+    sc3Label = '紀律部隊';
+    sc3Delta = '較紀律部隊' + (total >= sc3.total ? '高 +' : '低 ') + Math.round((total/sc3.total - 1) * 100) + '%';
+  }
+  $('sc1Val').textContent = fmt(sc1.total);
+  $('sc1Delta').textContent = '較基本情景 ' + (sc1.total >= total ? '+' : '') + Math.round((sc1.total/total-1)*100) + '%';
+  $('sc2Val').textContent = fmt(sc2.total);
+  $('sc2Desc').textContent = o.noGov ? '一般 MPF 員工與公司供款即時歸屬，離職可全數帶走。' : '未滿 10 年歸屬期，失去全部政府供款。';
+  $('sc2Delta').textContent = sc2.vested ? '已過歸屬期' : (o.noGov ? '員工及公司供款全數帶走' : '僅取回員工供款及回報');
+  $('sc3Title').textContent = sc3Label;
+  $('sc3Desc').textContent = o.noGov ? '同等薪資的公務員另有政府累進供款，差距顯著。'
+                                      : (o.force ? '文職僅 5% 起政府供款，無紀律部隊 2.5% 特別供款。' : '額外 2.5% 政府特別供款，長期複利可觀。');
+  $('sc3Val').textContent = fmt(sc3.total);
+  $('sc3Delta').textContent = sc3Delta;
+
+  drawChart(series, serviceYears, !o.noGov);
+  drawContribChart(series, serviceYears);
+}
+
+// 動態 X 軸年份標籤：依服務年資生成整數年份刻度（含第10年歸屬期標記）
+function buildYearLabels(targetId, serviceYears){
+  const wrap = $(targetId);
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  const ticks = new Set([0, serviceYears]);
+  if(serviceYears >= 10) ticks.add(10);
+  const step = Math.max(1, Math.round(serviceYears / 4));
+  for(let k = 1; k <= 3; k++){ const y = k * step; if(y > 0 && y < serviceYears) ticks.add(y); }
+  [...ticks].sort((a, b) => a - b).forEach(y => {
+    const s = document.createElement('span');
+    if(y === 0) s.textContent = '入職';
+    else if(y === serviceYears) s.textContent = '退休';
+    else { s.textContent = '第' + y + '年'; if(y === 10) s.className = 'amber'; }
+    wrap.appendChild(s);
+  });
+}
+
+function drawChart(series, serviceYears, showVest){
+  const W = 760, H = 200, padL = 40, padR = 40, padT = 30, padB = 10;
+  const maxY = series.length ? series[series.length-1].total : 1;
+  const n = series.length;
+  const x = i => padL + (W - padL - padR) * (n <= 1 ? 0 : i / (n - 1));
+  const y = v => (H - padB) - (H - padT - padB) * (v / maxY);
+  let vestSvg = '';
+  if(showVest && n > 1){
+    const vestIdx = Math.min(n - 1, Math.round(VEST_YEARS / serviceYears * (n - 1)));
+    const vestX = x(vestIdx), vestY = y(series[vestIdx].total);
+    vestSvg =
+      '<line x1="'+vestX.toFixed(1)+'" y1="'+vestY.toFixed(1)+'" x2="'+vestX.toFixed(1)+'" y2="'+(H-padB)+'" stroke="#F59E0B" stroke-width="1.5" stroke-dasharray="4 4"/>' +
+      '<circle cx="'+vestX.toFixed(1)+'" cy="'+vestY.toFixed(1)+'" r="5" fill="#F59E0B" stroke="#FFFFFF" stroke-width="2"/>';
+  }
+
+  let line = '', area = '';
+  series.forEach((s, i) => {
+    const px = x(i).toFixed(1), py = y(s.total).toFixed(1);
+    line += (i === 0 ? 'M' : 'L') + px + ',' + py + ' ';
+  });
+  area = 'M' + x(0).toFixed(1) + ',' + (H-padB) + ' ' +
+         series.map((s,i)=>'L'+x(i).toFixed(1)+','+y(s.total).toFixed(1)).join(' ') + ' ' +
+         'L' + x(n-1).toFixed(1) + ',' + (H-padB) + ' Z';
+
+  $('chartWrap').innerHTML =
+    '<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">' +
+    '<defs><linearGradient id="area" x1="0" y1="0" x2="0" y2="1">' +
+    '<stop offset="0%" stop-color="#014DB2" stop-opacity="0.22"/>' +
+    '<stop offset="100%" stop-color="#014DB2" stop-opacity="0.02"/></linearGradient></defs>' +
+    '<path d="'+area+'" fill="url(#area)"/>' +
+    vestSvg +
+    '<path d="'+line+'" fill="none" stroke="#014DB2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '<line class="hl" x1="0" y1="'+padT+'" x2="0" y2="'+(H-padB)+'"/>' +
+    '<circle class="hd" cx="0" cy="0" r="5.5"/>' +
+    '</svg>' +
+    '<div class="chart-tip" id="chartTip"><span class="tl" id="tipYear"></span><span class="ty" id="tipAmt"></span></div>';
+
+  chartState = {series, n, W, H, padL, padR, padT, padB, x, y};
+  buildYearLabels('xLabels', serviceYears);
+}
+
+// 圖表懸浮提示：顯示該年份與累算權益
+function bindChartHover(){
+  const wrap = $('chartWrap');
+  wrap.addEventListener('mousemove', e => {
+    if(!chartState || chartState.n === 0) return;
+    const svg = wrap.querySelector('svg');
+    const hl = wrap.querySelector('.hl'), hd = wrap.querySelector('.hd'), tip = $('chartTip');
+    if(!svg) return;
+    const sRect = svg.getBoundingClientRect();
+    const wRect = wrap.getBoundingClientRect();
+    let frac = (e.clientX - sRect.left) / sRect.width;
+    frac = Math.max(0, Math.min(1, frac));
+    const idx = Math.round(frac * (chartState.n - 1));
+    const p = chartState.series[idx];
+    const sx = chartState.x(idx), sy = chartState.y(p.total);
+    hl.setAttribute('x1', sx); hl.setAttribute('x2', sx);
+    hl.setAttribute('y1', chartState.padT); hl.setAttribute('y2', chartState.H - chartState.padB);
+    hl.style.opacity = 1;
+    hd.setAttribute('cx', sx); hd.setAttribute('cy', sy);
+    hd.style.opacity = 1;
+    tip.style.left = (sRect.left + (sx / chartState.W) * sRect.width - wRect.left) + 'px';
+    tip.style.top  = (sRect.top  + (sy / chartState.H) * sRect.height - wRect.top) + 'px';
+    tip.style.opacity = 1;
+    $('tipYear').textContent = '第 ' + p.year + ' 年';
+    $('tipAmt').textContent = fmt(p.total);
+  });
+  wrap.addEventListener('mouseleave', () => {
+    const hl = wrap.querySelector('.hl'), hd = wrap.querySelector('.hd'), tip = $('chartTip');
+    if(hl) hl.style.opacity = 0;
+    if(hd) hd.style.opacity = 0;
+    if(tip) tip.style.opacity = 0;
+  });
+}
+
+// ---------- 每年每月供款圖表（堆疊條：政府 + 員工）----------
+let contribState = null;
+function drawContribChart(series, serviceYears){
+  const W = 760, H = 200, padL = 44, padR = 16, padT = 16, padB = 22;
+  const n = series.length;
+  const plotH = H - padT - padB;
+  const base = H - padB;
+  const maxM = series.length ? Math.max(...series.map(s => s.monthly)) : 1;
+  const slot = (W - padL - padR) / Math.max(1, n);
+  const barW = Math.max(2, slot * 0.6);
+  const yM = v => base - plotH * (v / maxM);
+
+  let bars = '';
+  const geom = [];
+  series.forEach((s, i) => {
+    const x0 = padL + slot * i + (slot - barW) / 2;
+    const hE = base - yM(s.empM);
+    const hG = yM(s.empM) - yM(s.empM + s.govM);
+    bars += '<rect x="'+x0.toFixed(1)+'" y="'+yM(s.empM).toFixed(1)+'" width="'+barW.toFixed(1)+
+            '" height="'+hE.toFixed(1)+'" fill="#10B981" rx="2"/>';
+    bars += '<rect x="'+x0.toFixed(1)+'" y="'+yM(s.empM + s.govM).toFixed(1)+'" width="'+barW.toFixed(1)+
+            '" height="'+hG.toFixed(1)+'" fill="#014DB2" rx="2"/>';
+    geom.push({i, x0, cx: x0 + barW/2, year: s.year, govM: s.govM, empM: s.empM, monthly: s.monthly, sal: s.sal, pt: s.pt});
+  });
+
+  $('contribWrap').innerHTML =
+    '<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">' +
+    bars +
+    '<line class="hl" x1="0" y1="'+padT+'" x2="0" y2="'+base+'"/>' +
+    '</svg>' +
+    '<div class="chart-tip contrib-tip" id="contribTip">' +
+      '<span class="tl" id="tipCYr"></span>' +
+      '<span class="ty" id="tipCMonthly"></span>' +
+      '<div class="bd info"><span id="tipCPt"></span></div>' +
+      '<div class="bd info"><span id="tipCSal"></span></div>' +
+      '<div class="bd"><i class="dot gov"></i><span id="tipCGov"></span></div>' +
+      '<div class="bd"><i class="dot emp"></i><span id="tipCEmp"></span></div>' +
+    '</div>';
+
+  contribState = {geom, W, H, padL, padR, base, svgW: W};
+  buildYearLabels('contribLabels', serviceYears);
+}
+
+function bindContribHover(){
+  const wrap = $('contribWrap');
+  wrap.addEventListener('mousemove', e => {
+    if(!contribState || contribState.geom.length === 0) return;
+    const svg = wrap.querySelector('svg');
+    const hl = wrap.querySelector('.hl'), tip = $('contribTip');
+    if(!svg) return;
+    const sRect = svg.getBoundingClientRect();
+    const wRect = wrap.getBoundingClientRect();
+    let frac = (e.clientX - sRect.left) / sRect.width;
+    frac = Math.max(0, Math.min(1, frac));
+    const idx = Math.min(contribState.geom.length - 1, Math.round(frac * (contribState.geom.length - 1)));
+    const g = contribState.geom[idx];
+    const sx = (g.cx / contribState.W) * sRect.width;
+    hl.setAttribute('x1', sx); hl.setAttribute('x2', sx);
+    hl.setAttribute('y1', 16); hl.setAttribute('y2', contribState.base);
+    hl.style.opacity = 1;
+    tip.style.left = (sRect.left + sx - wRect.left) + 'px';
+    tip.style.top  = (sRect.top + 8 - wRect.top) + 'px';
+    tip.style.opacity = 1;
+    $('tipCYr').textContent = '第 ' + g.year + ' 年';
+    $('tipCMonthly').textContent = '每月供款 ' + fmt(g.monthly);
+    $('tipCPt').textContent = (g.pt != null) ? ('薪酬點 第 ' + g.pt + ' 點') : '薪酬點 —';
+    $('tipCSal').textContent = '月薪 ' + fmt(g.sal);
+    $('tipCGov').textContent = govLabel + ' ' + fmt(g.govM);
+    $('tipCEmp').textContent = '員工 ' + fmt(g.empM);
+  });
+  wrap.addEventListener('mouseleave', () => {
+    const hl = wrap.querySelector('.hl'), tip = $('contribTip');
+    if(hl) hl.style.opacity = 0;
+    if(tip) tip.style.opacity = 0;
+  });
+}
+
+// ---------- 讀取輸入 ----------
+function readInputs(){
+  const mode = document.querySelector('#modeToggle button.on').dataset.mode;
+  const cat = document.querySelector('#catSeg button.on').dataset.cat;
+  const force = cat === 'force';
+  const noGov = cat === 'private';
+  const rank = force ? getRank() : null;
+  // 普通打工模式才提供「工資 %」自願供款選項；其餘職系固定為固定金額
+  const volMode = noGov ? document.querySelector('#volModeSeg button.on').dataset.vmode : 'fixed';
+  const volVal = +$('vol').value;
+  const vol = volMode === 'pct' ? 0 : volVal;
+  const volPct = volMode === 'pct' ? volVal : 0;
+  const o = {
+    joinDate: $('joinDate').value,
+    joinAge: +$('joinAge').value,
+    retireAge: +$('retireAge').value,
+    growth: (+$('growth').value) / 100,
+    ret: (+$('ret').value) / 100,
+    vol, volMode, volPct,
+    force, noGov, rank, mode,
+    cohort: cohortFromJoin($('joinDate').value)
+  };
+  if(mode === 'manual'){
+    o.salary = +$('salary').value;
+    o.salaryFn = m => o.salary * Math.pow(1 + o.growth, Math.floor(m/12));
+    o.pointFn = m => {
+      const sal = o.salary * Math.pow(1 + o.growth, Math.floor(m/12));
+      if(!rank) return nearestPoint(sal, null);
+      const sc = dssScale(rank);
+      return sc.labels[nearestPoint(sal, rank)];
+    };
+  } else {
+    let sp = +$('startPoint').value, mp = +$('maxPoint').value;
+    if(mp < sp){ mp = sp; $('maxPoint').value = mp; }
+    o.startPoint = sp; o.maxPoint = mp;
+    if(rank){
+      const sc = dssScale(rank);
+      // 紀律部隊：依階級採用對應薪級表（員佐級 CSB 47 / 主任級 CSB 46）
+      o.salaryFn = m => {
+        const yi = Math.floor(m/12);
+        const step = Math.min(sp + yi, mp);
+        return sc.salary[step] * Math.pow(1 + o.growth, yi);
+      };
+      o.pointFn = m => sc.labels[Math.min(sp + Math.floor(m/12), mp)];
+    } else {
+      o.salaryFn = m => {
+        const yi = Math.floor(m/12);
+        const pt = Math.min(sp + yi, mp);
+        return mpsAt(pt) * Math.pow(1 + o.growth, yi);
+      };
+      o.pointFn = m => Math.min(sp + Math.floor(m/12), mp);
+    }
+  }
+  return o;
+}
+
+// 同步模式相關 UI 與薪級表高亮
+function getRank(){
+  const el = document.querySelector('#rankSeg button.on');
+  return el ? el.dataset.rank : 'nco';
+}
+function syncMode(){
+  const mode = document.querySelector('#modeToggle button.on').dataset.mode;
+  const cat = document.querySelector('#catSeg button.on').dataset.cat;
+  const force = cat === 'force';
+  const rank = force ? getRank() : null;
+  const manual = mode === 'manual';
+  $('rankField').classList.toggle('hidden', !force);
+  $('manualField').classList.toggle('hidden', !manual);
+  $('scaleField').classList.toggle('hidden', manual);
+  $('growthLabel').textContent = manual ? '預期年薪增長率' : '薪級表年度調整';
+  $('growthNote').textContent = manual ? '薪資每年按此比率遞增' : '薪級表每年按此比率整體調整';
+  if(rank) $('rankNote').textContent = (rank === 'officer' ? '主任級採用「紀律人員(主任級)薪級表」（CSB 46）' : '員佐級採用「紀律人員(員佐級)薪級表」（CSB 47）');
+  if(manual){
+    const sal = +$('salary').value;
+    if(!rank){
+      const pt = nearestPoint(sal, null);
+      $('mpsNote').textContent = '約總薪級表第 ' + pt + ' 點';
+      highlightMps(pt);
+    } else {
+      const sc = dssScale(rank);
+      const idx = nearestPoint(sal, rank);
+      $('mpsNote').textContent = '約紀律部隊薪級表第 ' + sc.labels[idx] + ' 點';
+      highlightMps(idx);
+    }
+  } else {
+    const sp = +$('startPoint').value;
+    const sal = rank ? dssScale(rank).salary[sp] : mpsAt(sp);
+    $('pointLine').textContent = '入職月薪 ' + fmt(sal);
+    highlightMps(sp);
+  }
+}
+function nearestPoint(sal, rank){
+  const arr = rank ? dssScale(rank).salary : MPS_SALARY;
+  let best = 0, bestd = Infinity;
+  for(let p = 0; p < arr.length; p++){ const d = Math.abs(arr[p] - sal); if(d < bestd){ bestd = d; best = p; } }
+  return best;
+}
+function highlightMps(pt){
+  const cells = document.querySelectorAll('.mps-cell');
+  let pick = null, bestd = Infinity;
+  cells.forEach(c => { const d = Math.abs(+c.dataset.point - pt); if(d < bestd){ bestd = d; pick = c; } });
+  cells.forEach(c => c.classList.toggle('cur', c === pick));
+}
+function buildMpsGrid(rank){
+  const grid = $('mpsGrid');
+  grid.innerHTML = '';
+  if(rank){
+    const sc = dssScale(rank);
+    for(let p = 0; p < sc.salary.length; p++){
+      const cell = document.createElement('div');
+      cell.className = 'mps-cell';
+      cell.dataset.point = p;
+      cell.innerHTML = '<span class="pl">第 ' + sc.labels[p] + ' 點</span><span class="pv">$' + sc.salary[p].toLocaleString('en-HK') + '</span>';
+      grid.appendChild(cell);
+    }
+    $('mpsTitle').textContent = sc.name + '參考';
+    $('mpsSub').textContent = '資料來源：公務員事務局（只供參考，2026-04-01 起生效，' + sc.src + '）';
+    $('mpsFoot').textContent = sc.name + '月薪隨年度調整，詳情請參閱公務員事務局官方網頁。藍色高亮為你選擇的入職薪點。';
+  } else {
+    for(let p = 0; p < MPS_SALARY.length; p++){
+      const cell = document.createElement('div');
+      cell.className = 'mps-cell';
+      cell.dataset.point = p;
+      cell.innerHTML = '<span class="pl">第 ' + p + ' 點</span><span class="pv">$' + MPS_SALARY[p].toLocaleString('en-HK') + '</span>';
+      grid.appendChild(cell);
+    }
+    $('mpsTitle').textContent = '總薪級表參考';
+    $('mpsSub').textContent = '資料來源：公務員事務局（只供參考，2026-04-01 起生效，csb.gov.hk/tc_chi/admin/pay/42.html）';
+    $('mpsFoot').textContent = '總薪級表月薪隨年度調整，詳情請參閱公務員事務局官方網頁。藍色高亮為你選擇的入職薪點。';
+  }
+}
+
+// ---------- 綁定事件 ----------
+['joinDate','joinAge','retireAge','salary','growth','ret','vol','startPoint','maxPoint'].forEach(id=>{
+  $(id).addEventListener('input', ()=>{ syncMode(); render(readInputs()); });
+  $(id).addEventListener('change', ()=>{ syncMode(); render(readInputs()); });
+});
+document.querySelectorAll('#catSeg button').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.querySelectorAll('#catSeg button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    const force = b.dataset.cat === 'force';
+    const rank = force ? getRank() : null;
+    const private = b.dataset.cat === 'private';
+    // 僅普通打工模式顯示「自願供款」的「工資 %」選項；離開時重設回固定金額
+    $('volModeSeg').classList.toggle('hidden', !private);
+    if(!private){
+      document.querySelectorAll('#volModeSeg button').forEach(x=>x.classList.remove('on'));
+      document.querySelector('#volModeSeg button[data-vmode="fixed"]').classList.add('on');
+      $('vol').value = 1600;
+    }
+    buildPointSelects(rank);    // 職系切換時重建薪點下拉（MPS / 紀律部隊薪級表）
+    buildMpsGrid(rank);         // 同步切換參考薪級表
+    syncMode();
+    render(readInputs());
+  });
+});
+// 自願供款型式切換：固定金額 ↔ 工資 %
+document.querySelectorAll('#volModeSeg button').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.querySelectorAll('#volModeSeg button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    // 切換時給予該型式合理的預設值
+    $('vol').value = b.dataset.vmode === 'pct' ? 5 : 1600;
+    render(readInputs());
+  });
+});
+document.querySelectorAll('#rankSeg button').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.querySelectorAll('#rankSeg button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    const rank = b.dataset.rank;
+    buildPointSelects(rank);
+    buildMpsGrid(rank);
+    syncMode();
+    render(readInputs());
+  });
+});
+document.querySelectorAll('#modeToggle button').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.querySelectorAll('#modeToggle button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    syncMode(); render(readInputs());
+  });
+});
+$('calcBtn').addEventListener('click', ()=>render(readInputs()));
+
+// 初始化薪點下拉（依職系/階級：文職/普通打工用總薪級表 0–49；紀律部隊依階級用對應薪級表）
+function buildPointSelects(rank){
+  const sp = $('startPoint'), mp = $('maxPoint');
+  sp.innerHTML = ''; mp.innerHTML = '';
+  if(rank){
+    const sc = dssScale(rank);
+    sc.labels.forEach((lbl, i) => {
+      sp.add(new Option('第 ' + lbl + ' 點', i));
+      mp.add(new Option('第 ' + lbl + ' 點', i));
+    });
+    // 新入職起薪點：員佐級為第 1 點（index 0）；主任級為第 1 點（index 2，跳過 1b/1a 比對薪點）
+    sp.value = rank === 'officer' ? 2 : 0;
+    mp.value = sc.labels.length - 1;
+  } else {
+    for(let p = 0; p <= 49; p++){
+      sp.add(new Option('第 ' + p + ' 點', p));
+      mp.add(new Option('第 ' + p + ' 點', p));
+    }
+    sp.value = 23; mp.value = 40;
+  }
+}
+
+const initForce = document.querySelector('#catSeg button.on').dataset.cat === 'force';
+const initRank = initForce ? getRank() : null;
+buildPointSelects(initRank);
+bindChartHover();
+bindContribHover();
+buildMpsGrid(initRank);
+syncMode();
+render(readInputs());
+</script>
+</body>
+</html>
